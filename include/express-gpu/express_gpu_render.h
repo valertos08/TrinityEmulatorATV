@@ -4,8 +4,11 @@
 #include "qemu/atomic.h"
 
 #include "glad/glad.h"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#ifdef _WIN32
 #include <GLFW/glfw3native.h>
+#endif
 
 #include "express-gpu/egl_window.h"
 

@@ -23,6 +23,10 @@
 
 #include "express-gpu/glv1.h"
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 void gl3_decode_invoke(Render_Thread_Context *r_context, Direct_Express_Call *call)
 {
     Render_Thread_Context *render_context = (Render_Thread_Context *)r_context;

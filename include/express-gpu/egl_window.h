@@ -1,5 +1,7 @@
 #ifndef __egl_window_h_
 #define __egl_window_h_
+
+#ifdef _WIN32
 #include <windows.h>
 #include "wglext.h"
 
@@ -24,6 +26,7 @@ typedef BOOL(WINAPI *PFN_wglShareLists)(HGLRC, HGLRC);
 typedef BOOL(WINAPI *PFN_wglGetPixelFormatAttribiv)(HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
 typedef BOOL(WINAPI *PFN_wglGetPixelFormatAttribfv)(HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, FLOAT *pfValues);
 typedef BOOL(WINAPI *PFN_wglChoosePixelFormat)(HDC, const int *piAttribList, const FLOAT *pfAttribList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+#endif /* _WIN32 */
 
 void egl_init(void *dpy, void *father_context);
 void *egl_createContext();

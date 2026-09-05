@@ -10,6 +10,8 @@
  */
 #include "express-gpu/egl_display.h"
 #include "express-gpu/egl_config.h"
+#include "glad/glad.h"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 const unsigned int config_attrs[NUM_ATTRS] = {

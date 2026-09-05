@@ -23,6 +23,15 @@ typedef void *EGLNativeDisplayType;
 typedef struct egl_native_pixmap_t *EGLNativePixmapType;
 typedef struct ANativeWindow *EGLNativeWindowType;
 
+#elif defined(__unix__)
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+typedef Display *EGLNativeDisplayType;
+typedef Pixmap EGLNativePixmapType;
+typedef Window EGLNativeWindowType;
+
 #else
 #error "Platform not recognized"
 #endif

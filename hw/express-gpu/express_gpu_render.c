@@ -22,11 +22,17 @@
 #include "express-gpu/glv1.h"
 #include "express-gpu/gl_helper.h"
 
-#include "ui/console.h"
+typedef struct QemuConsole QemuConsole;
+QemuConsole *qemu_console_lookup_by_index(unsigned int index);
 #include "ui/input.h"
 #include "sysemu/runstate.h"
 
 #include "express-gpu/sdl_control.h"
+
+#include <GLFW/glfw3.h>
+#ifdef _WIN32
+#include <GLFW/glfw3native.h>
+#endif
 
 GAsyncQueue *main_window_event_queue = NULL;
 int main_window_event_queue_lock = 0;
@@ -73,7 +79,7 @@ static gint64 gen_frame_time_avg_1s = 0;
 
 #define EVENT_QUEUE_UNLOCK atomic_cmpxchg(&(event_queue_lock), 1, 0);
 
-static GLFWwindow *glfw_window = NULL;
+GLFWwindow *express_gpu_glfw_window = NULL;
 
 void *dummy_window_for_sync = NULL;
 
@@ -1252,7 +1258,7 @@ static void *native_window_create(int independ_mode)
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-        child_window = (void *)glfwCreateWindow(1, 1, name, NULL, glfw_window);
+        child_window = (void *)glfwCreateWindow(1, 1, name, NULL, express_gpu_glfw_window);
 
         if (child_window == NULL)
         {
@@ -1300,8 +1306,8 @@ void *native_window_thread(void *opaque)
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-    glfw_window = glfwCreateWindow(1024, 768, "Trinity", NULL, NULL);
-    if (!glfw_window)
+    express_gpu_glfw_window = glfwCreateWindow(1024, 768, "Trinity", NULL, NULL);
+    if (!express_gpu_glfw_window)
     {
         express_printf("create window error %x\n", glfwGetError(NULL));
 
@@ -1309,28 +1315,32 @@ void *native_window_thread(void *opaque)
         return NULL;
     }
 
-    glfwSetKeyCallback(glfw_window, keyboard_handle_callback);
-    glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetKeyCallback(express_gpu_glfw_window, keyboard_handle_callback);
+    glfwSetInputMode(express_gpu_glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-    glfwSetCursorPosCallback(glfw_window, mouse_move_handle_callback);
-    glfwSetMouseButtonCallback(glfw_window, mouse_click_handle_callback);
-    glfwSetScrollCallback(glfw_window, mouse_scroll_handle_callback);
+    glfwSetCursorPosCallback(express_gpu_glfw_window, mouse_move_handle_callback);
+    glfwSetMouseButtonCallback(express_gpu_glfw_window, mouse_click_handle_callback);
+    glfwSetScrollCallback(express_gpu_glfw_window, mouse_scroll_handle_callback);
 
-    glfwSetFramebufferSizeCallback(glfw_window, window_size_change_callback);
+    glfwSetFramebufferSizeCallback(express_gpu_glfw_window, window_size_change_callback);
 
-    glfwSetWindowCloseCallback(glfw_window, close_window_callback);
+    glfwSetWindowCloseCallback(express_gpu_glfw_window, close_window_callback);
 
     shutdown_notifier.notify = shutdown_notify_callback;
     qemu_register_shutdown_notifier(&shutdown_notifier);
 
-    glfwMakeContextCurrent(glfw_window);
+    glfwMakeContextCurrent(express_gpu_glfw_window);
 
-    HDC dpy_dc = GetDC(glfwGetWin32Window(glfw_window));
-    HGLRC gl_context = glfwGetWGLContext(glfw_window);
+#ifdef _WIN32
+    HDC dpy_dc = GetDC(glfwGetWin32Window(express_gpu_glfw_window));
+    HGLRC gl_context = glfwGetWGLContext(express_gpu_glfw_window);
     egl_init(dpy_dc, gl_context);
+#else
+    egl_init(NULL, NULL);
+#endif
 
 #ifdef USE_GLFW_AS_WGL
-    dummy_window_for_sync = glfwCreateWindow(1, 1, "sync", NULL, glfw_window);
+    dummy_window_for_sync = glfwCreateWindow(1, 1, "sync", NULL, express_gpu_glfw_window);
 #else
     dummy_window_for_sync = egl_createContext();
 #endif
@@ -1374,7 +1384,7 @@ void *native_window_thread(void *opaque)
     glDebugMessageCallback(gl_debug_output, NULL);
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
-    while (!glfwWindowShouldClose(glfw_window) && native_render_run == 2)
+    while (!glfwWindowShouldClose(express_gpu_glfw_window) && native_render_run == 2)
     {
 
         frame_start_time = g_get_real_time();
@@ -1422,11 +1432,11 @@ void *native_window_thread(void *opaque)
             if (sdl2_no_need == 0 && window_width != 0 && window_height != 0)
             {
                 sdl2_no_need = 1;
-                glfwSetWindowSize(glfw_window, window_width * 3 / 4, window_height * 3 / 4);
-                glfwShowWindow(glfw_window);
+                glfwSetWindowSize(express_gpu_glfw_window, window_width * 3 / 4, window_height * 3 / 4);
+                glfwShowWindow(express_gpu_glfw_window);
             }
 
-            glfwSwapBuffers(glfw_window);
+            glfwSwapBuffers(express_gpu_glfw_window);
         }
         else
         {
@@ -1437,10 +1447,10 @@ void *native_window_thread(void *opaque)
                 window_width = 0;
                 real_window_width = window_width;
                 real_window_height = window_height;
-                glfwHideWindow(glfw_window);
+                glfwHideWindow(express_gpu_glfw_window);
             }
 
-            glfwSwapBuffers(glfw_window);
+            glfwSwapBuffers(express_gpu_glfw_window);
         }
 
         gint64 now_time = g_get_real_time();
@@ -1482,7 +1492,7 @@ void *native_window_thread(void *opaque)
     }
 
     glfwMakeContextCurrent(NULL);
-    glfwDestroyWindow(glfw_window);
+    glfwDestroyWindow(express_gpu_glfw_window);
 
     printf("native windows close!\n");
 

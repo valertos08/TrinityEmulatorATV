@@ -457,7 +457,7 @@ static Direct_Express_Call *pack_call_from_queue(VirtQueue *vq)
     return NULL;
 }
 
-Thread_Context *thread_context_create(unsigned long long thread_id, unsigned long long type_id, unsigned long long len, Express_Device_Info *info)
+Thread_Context *thread_context_create(uint64_t thread_id, uint64_t type_id, uint64_t len, Express_Device_Info *info)
 {
 
     Thread_Context *context = g_malloc(len);

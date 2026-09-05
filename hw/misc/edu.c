@@ -37,8 +37,10 @@
 // #include "GLES3/gl3.h"
 #include "ui/console.h"
 #include "qemu/typedefs.h"
+#ifdef _WIN32
 #include "windows.h"
 #include "winuser.h"
+#endif
 #include "qemu/atomic.h"
 
 #define TYPE_PCI_EDU_DEVICE "edu"

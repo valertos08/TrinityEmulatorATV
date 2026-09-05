@@ -701,10 +701,13 @@ Graphic_Buffer *create_gbuffer(int width, int height, int sampler_num,
     
     Graphic_Buffer *gbuffer = g_malloc0(sizeof(Graphic_Buffer));
 
-    gbuffer->writing_ok_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     gbuffer->remain_life_time = MAX_WINDOW_LIFE_TIME;;
     gbuffer->usage_type = GBUFFER_TYPE_WINDOW;
     gbuffer->gbuffer_id = gbuffer_id;
+
+#ifdef _WIN32
+    gbuffer->writing_ok_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+#endif
 
     GLuint pre_vbo = 0;
     GLuint pre_texture = 0;
@@ -1010,8 +1013,6 @@ void destroy_gbuffer(Graphic_Buffer *gbuffer)
     
 #ifdef _WIN32
     CloseHandle(gbuffer->writing_ok_event);
-#else
-
 #endif
 
     g_free(gbuffer);

@@ -2451,7 +2451,11 @@ EOF
     fi
 fi
 
-libs_softmmu="$libs_softmmu -lglfw3 -lopengl32 "
+if test "$mingw32" = "yes" ; then
+    libs_softmmu="$libs_softmmu -lglfw3 -lopengl32 "
+else
+    libs_softmmu="$libs_softmmu -lglfw -lGL"
+fi
 
 ##########################################
 # snappy check

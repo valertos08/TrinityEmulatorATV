@@ -2451,10 +2451,20 @@ EOF
     fi
 fi
 
+# Express-GPU / direct-express window backend
 if test "$mingw32" = "yes" ; then
     libs_softmmu="$libs_softmmu -lglfw3 -lopengl32 "
 else
-    libs_softmmu="$libs_softmmu -lglfw -lGL"
+    libs_softmmu="$libs_softmmu -lGL"
+    if $pkg_config --exists glfw3 2>/dev/null ; then
+        libs_softmmu="$libs_softmmu $($pkg_config --libs glfw3)"
+    else
+        if $pkg_config --exists glfw 2>/dev/null ; then
+            libs_softmmu="$libs_softmmu $($pkg_config --libs glfw)"
+        else
+            error_exit "GLFW not found. Install libglfw3-dev (Debian/Ubuntu) or libglfw-dev (Fedora)."
+        fi
+    fi
 fi
 
 ##########################################
